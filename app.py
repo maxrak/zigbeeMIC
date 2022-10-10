@@ -148,7 +148,10 @@ def EvaluateX0():
 def EvaluateMIC(key,AuthData,X0,B0):
   cipher = AES.new(key, AES.MODE_CBC, X0)
   X1 = cipher.encrypt(B0 + AuthData)
-  T = X1[-16:-12]
+  #T = X1[-16:-12]
+  T=X1[0:4]
+  print ('X1 = ',end='')
+  printhex (X1)
   print ('MIC = ',end='')
   printhex (T)
   return T
@@ -166,8 +169,7 @@ def EvaluateEncryptedMIC(T):
   A0 = Flags + gnonce + bytes([0x00, 0x00])
   A1 = Flags + gnonce + bytes([0x00, 0x01])
 
-  ctr = Counter.new(128)
-  cipher = AES.new(key, AES.MODE_CTR, nonce=gnonce)
+  cipher = AES.new(key, AES.MODE_CTR)
   #Ciphertext = cipher.encrypt(m)
   #printhex (Ciphertext)
 #  Encryption: S0:= E(Key, A0)
