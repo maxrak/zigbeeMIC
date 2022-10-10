@@ -23,6 +23,12 @@ mic = bytes([0xDB, 0x62, 0xA8, 0xC5])
 L = 2
 M = 4
 
+#BLog Values
+blograw='61 88 64 47 24 00 00 8A 5C 48 02 00 00 8A 5C 1E 5D 28 E1 00 00 00 01 3C E8 01 00 8D 15 00 01 EA 59 DE 1F 96 0E EA 8A EE 18 5A 11 89 30 96 41 4E 05 A2 43 8A FB'
+blogdecraw='61 88 64 47 24 00 00 8A 5C 48 02 00 00 8A 5C 1E 5D 28 E1 00 00 00 01 3C E8 01 00 8D 15 00 01 00 01 12 00 04 01 01 62 18 C3 0A 55 00 21 01 00 AC 4C 76 AF 8A FB'
+blogKey='AD 8E BB C4 F9 6A E7 00 05 06 D3 FC D1 62 7F B8'
+blogdecpayload='00 01 12 00 04 01 01 62 18 C3 0A 55 00 21 01 00'
+
 gnonce=bytes([0xDB, 0x62, 0xA8, 0xC5])
 
 # Print aray of bytes in hexadecimal
@@ -62,7 +68,8 @@ def raw2bytes(raw):
     lst.append(bytes(int(letter)))
 
 def decodepayload():
-  decpayload='400b060004010146011801'
+  #decpayload='400b060004010146011801'
+  decpayload='00 01 12 00 04 01 01 62 18 C3 0A 55 00 21 01 00'
   mex=bytes.fromhex(decpayload)
   printhex(mex)
   return mex
@@ -225,6 +232,8 @@ def counter():
   return A1
 
 def _main():
+  #key=bytes(blogKey)
+  #msg=raw2NWKmsg(blograw)
   msg=raw2NWKmsg(raw)
   printMsg(msg)
   nonce = EvaluateNonce(msg)
