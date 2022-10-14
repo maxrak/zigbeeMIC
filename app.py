@@ -254,7 +254,7 @@ def _main():
   MIC=EvaluateMIC(key,AuthData,X0,B0,nonce)
   print('Orig MIC=',end='')
   printhex(msg['MIC'])
-  #eMIC=EvaluateEncryptedMIC(MIC,nonce)
+ # eMIC=EvaluateEncryptedMIC(MIC,nonce)
   print('Done')
 
  
