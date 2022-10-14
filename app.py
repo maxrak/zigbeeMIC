@@ -24,7 +24,7 @@ L = 2
 M = 4
 
 #BLog Values
-blograw='61 88 64 47 24 00 00 8A 5C 48 02 00 00 8A 5C 1E 5D 28 E1 00 00 00 01 3C E8 01 00 8D 15 00 01 EA 59 DE 1F 96 0E EA 8A EE 18 5A 11 89 30 96 41 4E 05 A2 43 8A FB'
+blograw='61 88 64 47 24 00 00 8A 5C 48 02 00 00 8A 5C 1E 5D 2D E1 00 00 00 01 3C E8 01 00 8D 15 00 01 EA 59 DE 1F 96 0E EA 8A EE 18 5A 11 89 30 96 41 4E 05 A2 43 8A FB'
 blogdecraw='61 88 64 47 24 00 00 8A 5C 48 02 00 00 8A 5C 1E 5D 28 E1 00 00 00 01 3C E8 01 00 8D 15 00 01 00 01 12 00 04 01 01 62 18 C3 0A 55 00 21 01 00 AC 4C 76 AF 8A FB'
 blogKey='AD 8E BB C4 F9 6A E7 00 05 06 D3 FC D1 62 7F B8'
 blogdecpayload='00 01 12 00 04 01 01 62 18 C3 0A 55 00 21 01 00'
@@ -68,7 +68,11 @@ def raw2bytes(raw):
     lst.append(bytes(int(letter)))
 
 def decodepayload():
+
+  #Alexa-Hue Decoded Payload
   #decpayload='400b060004010146011801'
+  
+  #Blog Decoded Payload
   decpayload='00 01 12 00 04 01 01 62 18 C3 0A 55 00 21 01 00'
   mex=bytes.fromhex(decpayload)
   printhex(mex)
@@ -108,7 +112,7 @@ def EvaluateA(msg):
   return a;
 
 def EvaluateM(msg):
-  m = msg['APSHeader'] + msg['APSPayload']
+  m = msg['decNwkPayload']
 # Octet string m
   print ('m (',len(m),'bytes): ',end='')
   printhex(m)
@@ -152,16 +156,39 @@ def EvaluateX0():
   printhex(X0)
   return X0;
 
-def EvaluateMIC(key,AuthData,X0,B0):
+def EvaluateMIC(key,AuthData,X0,B0,nonce):
+  print('key:',end='')
+  printhex(key)
   cipher = AES.new(key, AES.MODE_CBC, X0)
   X1 = cipher.encrypt(B0 + AuthData)
-  #T = X1[-16:-12]
-  T=X1[0:4]
+  T = X1[-16:-12]
+  #T=X1[0:4]
   print ('X1 = ',end='')
   printhex (X1)
-  print ('MIC = ',end='')
+  print ('T = ',end='')
   printhex (T)
-  return T
+#  return T
+  #def EvaluateEncryptedMIC(T,nonce):
+
+  Flags = bytes ([0b00000001])
+  # printhex (Flags)
+  A0 = Flags + nonce + bytes([0x00, 0x00])
+  A1 = Flags + nonce + bytes([0x00, 0x01])
+
+  #cipher = AES.new(key, AES.MODE_CBC)
+  #Ciphertext = cipher.encrypt(m)
+  #printhex (Ciphertext)
+#  Encryption: S0:= E(Key, A0)
+  S0 = cipher.encrypt(A0)
+  print ('S0 (',len(S0),'bytes):',end='')
+  printhex(S0)
+  print ('A0 (',len(A0),'bytes):',end='')
+  printhex(A0)
+  eMIC=byte_xor(T,S0[0:4])
+  print ('eMIC (',len(eMIC),'bytes):',end='')
+  printhex(eMIC)
+  return eMIC
+
 
 def byte_xor(ba1, ba2):
     return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
@@ -169,25 +196,6 @@ def byte_xor(ba1, ba2):
 def counter():
   return 
 
-def EvaluateEncryptedMIC(T):
-  Flags = bytes ([0b00000001])
-  # printhex (Flags)
-
-  A0 = Flags + gnonce + bytes([0x00, 0x00])
-  A1 = Flags + gnonce + bytes([0x00, 0x01])
-
-  cipher = AES.new(key, AES.MODE_CTR)
-  #Ciphertext = cipher.encrypt(m)
-  #printhex (Ciphertext)
-#  Encryption: S0:= E(Key, A0)
-  S0 = cipher.encrypt(A0)
-  print ('S0 (',len(S0),'bytes):',end='')
-  printhex(S0[0:4])
-  print ('T (',len(T),'bytes):',end='')
-  printhex(T)
-  eMIC=byte_xor(T,S0[0:4])
-  print ('eMIC (',len(eMIC),'bytes):',end='')
-  printhex(eMIC)
   
 
 def printMsg(msg):
@@ -232,9 +240,9 @@ def counter():
   return A1
 
 def _main():
-  #key=bytes(blogKey)
-  #msg=raw2NWKmsg(blograw)
-  msg=raw2NWKmsg(raw)
+  key=bytes.fromhex(blogKey)
+  msg=raw2NWKmsg(blograw)
+  #msg=raw2NWKmsg(raw)
   printMsg(msg)
   nonce = EvaluateNonce(msg)
   a = EvaluateA(msg)
@@ -243,10 +251,10 @@ def _main():
   Flags=EvaluateFlags()
   B0=EvaluateB0(Flags,nonce,m)
   X0=EvaluateX0()
-  MIC=EvaluateMIC(key,AuthData,X0,B0)
+  MIC=EvaluateMIC(key,AuthData,X0,B0,nonce)
   print('Orig MIC=',end='')
   printhex(msg['MIC'])
-  eMIC=EvaluateEncryptedMIC(MIC)
+  #eMIC=EvaluateEncryptedMIC(MIC,nonce)
   print('Done')
 
  
